@@ -11,3 +11,4 @@ def redis_config():
 
     except:
         print("redis connection failure")
+

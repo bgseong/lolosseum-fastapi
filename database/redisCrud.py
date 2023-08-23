@@ -1,7 +1,7 @@
 from database.redisconfig import redis_config
-from DTO.Request import Request
+from DTO.postRequest import postRequest
 import json
-def create_chat( req: Request,id: str, time: int):
+def create_chat(req: postRequest, id: str, time: int):
     rd = redis_config()
     dic = req.dict()
     dic["chat_id"] = id
@@ -12,7 +12,19 @@ def create_chat( req: Request,id: str, time: int):
 def get_chat(room_id: str):
     rd = redis_config()
     jsonString = rd.lrange("v1@test@"+room_id,0,-1)
-    for j in jsonString:
-        j = json.loads(j)
+    jsonString = list(map(json.loads, jsonString))
 
     return jsonString
+
+def update_chat(room_id:str, index:int, message: str):
+    rd = redis_config()
+    Data = json.loads(rd.lindex("v1@test@"+room_id, index))
+    Data["message"] = message
+    rd.lset("v1@test@"+room_id,index,json.dumps(Data))
+
+def delete_chat(room_id:str, index:int):
+    rd = redis_config()
+    oldData = rd.lindex("v1@test@"+room_id, index)
+    newData = oldData.replace("\"message\": "+json.loads(oldData)["message"], "\"message\": \"삭제된 메시지입니다\"")
+    rd.lset("v1@test@"+room_id,index,newData)
+

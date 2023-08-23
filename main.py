@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends
 from fastapi.responses import JSONResponse
-from DTO.Request import Request
+from DTO.postRequest import postRequest
+from DTO.postRequest import message
 from database import connection
 from database import crud
 from database import redisCrud
@@ -27,7 +28,7 @@ async def getchats(roomId: str, db: Session = Depends(get_db)):
     return JSONResponse(content=response)
 
 @app.post("/api/v1/chats")
-async def postchats(req: Request,db: Session = Depends(get_db)):
+async def postchats(req: postRequest, db: Session = Depends(get_db)):
     id = str(uuid.uuid4())
     unix = int(time.time())
     crud.create_chat(db,req,id,unix)
@@ -36,14 +37,20 @@ async def postchats(req: Request,db: Session = Depends(get_db)):
     return None
 
 @app.get("/api/v1/chats/{chatId}")
-async def getOnechats(chatId:str, db: Session = Depends(get_db)):
+async def getOnechats(db: Session = Depends(get_db)):
+
     return None
 
 @app.patch("/api/v1/chats")
-async def updatechats(db: Session = Depends(get_db)):
-    return None
+async def updatechats(chatId:str, roodId: str, index:int, req:message, db: Session = Depends(get_db)):
+    redisCrud.update_chat(roodId,index,req.message)
+    crud.update_chat(db,chatId,message)
+    response = {"ok": True, "msg": "채팅 수정 성공"}
+    return JSONResponse(content=response)
 
 @app.delete("/api/v1/chats")
-async def delchats(db: Session = Depends(get_db)):
+async def delchats(chatId:str, roodId: str, index:int, db: Session = Depends(get_db)):
+    redisCrud.delete_chat(roodId,index)
+    crud.delete_chat(db,chatId)
     return None
 
